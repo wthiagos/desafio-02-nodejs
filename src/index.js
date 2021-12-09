@@ -10,19 +10,100 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+
+  if (!username) {
+    return response
+      .status(400)
+      .json({ error: 'Username cannot be empty!' });
+  }
+
+  const user = users.find(u => u.username === username.trim());
+
+  if (!user) {
+    return response
+      .status(404)
+      .json({ error: 'User not found!' });
+  }
+
+  request.user = user;
+
+  return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+
+  const isUserProPlan = user.pro;
+  const todoLength = user.todos.length;
+
+  if (!isUserProPlan && todoLength >= 10) {
+    return response
+      .status(403)
+      .json({ error: 'User has already 10 todos!' });
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  if (!validate(id)) {
+    return response
+      .status(400)
+      .json({ error: 'Id is not valid!' });
+  }
+
+  if (!username) {
+    return response
+      .status(400)
+      .json({ error: 'Username cannot be empty!' });
+  }
+
+  const user = users.find(u => u.username === username.trim());
+
+  if (!user) {
+    return response
+      .status(404)
+      .json({ error: 'User not found!' });
+  }
+
+  const todo = user.todos.find(t => t.id === id);
+
+  if (!todo) {
+    return response
+      .status(404)
+      .json({ error: 'Todo not found!' });
+  }
+
+  request.todo = todo;
+  request.user = user;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  if (!validate(id)) {
+    return response
+      .status(400)
+      .json({ error: 'Id is not valid!' });
+  }
+
+  const user = users.find(u => u.id === id.trim());
+
+  if (!user) {
+    return response
+      .status(404)
+      .json({ error: 'User not found!' });
+  }
+
+  request.user = user;
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
